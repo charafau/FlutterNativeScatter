@@ -1,6 +1,12 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  print('started!');
+  addNumbers(2, 3);
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -44,6 +50,17 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+// C function signature (Pointer<Int32> Function(Int32, Int32))
+typedef AddNumbersC = Int32 Function(Int32 a, Int32 b);
+
+// Dart function signature (int Function(int, int))
+typedef AddNumbersDart = int Function(int a, int b);
+final DynamicLibrary nativeLib = DynamicLibrary.process();
+
+// Look up the symbol and cast it
+final AddNumbersDart addNumbers = nativeLib
+    .lookupFunction<AddNumbersC, AddNumbersDart>('add_numbers');
+
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
@@ -56,6 +73,10 @@ class _MyHomePageState extends State<MyHomePage> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+  }
+
+  void invokeNative() {
+    addNumbers(2, 3);
   }
 
   @override
@@ -101,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: invokeNative,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
