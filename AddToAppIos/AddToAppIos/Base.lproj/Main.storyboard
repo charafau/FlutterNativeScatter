@@ -16,9 +16,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Hello" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Jf6-BS-wGj">
-                                <rect key="frame" x="175" y="416" width="39" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="This is proof of concept showing how to create UIKit widgets from Dart program" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="13" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Jf6-BS-wGj">
+                                <rect key="frame" x="0.0" y="395.66666666666669" width="393" height="40.666666666666686"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -26,11 +25,18 @@
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="Jf6-BS-wGj" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="0IK-WS-m9N"/>
+                            <constraint firstItem="Jf6-BS-wGj" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="277.66666666666663" id="9N9-ST-8tX"/>
+                            <constraint firstAttribute="trailing" secondItem="Jf6-BS-wGj" secondAttribute="trailing" id="Afg-HH-7fa"/>
+                            <constraint firstItem="Jf6-BS-wGj" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="b0N-NO-LR0"/>
+                            <constraint firstItem="Jf6-BS-wGj" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="e5q-bV-HeK"/>
+                        </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="126" y="132"/>
+            <point key="canvasLocation" x="125.95419847328243" y="131.69014084507043"/>
         </scene>
     </scenes>
     <resources>

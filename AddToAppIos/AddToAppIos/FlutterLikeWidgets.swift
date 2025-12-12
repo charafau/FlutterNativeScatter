@@ -10,7 +10,6 @@ import UIKit
 import FlexLayout
 import PinLayout
 
-// MARK: - 1. Base Abstraction
 // In a Flutter-like system, everything is a Widget. Here, every Widget wraps a UIView.
 public class FlexWidget: NSObject {
     public let view: UIView
@@ -20,7 +19,6 @@ public class FlexWidget: NSObject {
     }
 }
 
-// MARK: - 2. Container Widgets (Layout & Composition)
 
 // Handles Padding, Size, Color, and a single Child
 public class ContainerWidget: FlexWidget {
