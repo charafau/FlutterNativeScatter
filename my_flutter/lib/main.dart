@@ -1,6 +1,8 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:my_flutter/bindings.dart';
+import 'package:my_flutter/native_widgets_ffi.dart';
 
 void main() {
   print('started!');
@@ -75,6 +77,49 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void buildAndRetrieveNativeView() {
+    // 1. Build the widget tree using the compositional approach
+    final headerRow = RowWidget(
+      children: [
+        ImageWidget("person.crop.circle.fill"),
+        TextWidget(" John Doe"),
+      ],
+    );
+
+    final cardContentColumn = ColumnWidget(
+      children: [
+        headerRow,
+        TextWidget("This UI is built in FlexLayout and composed in Dart!"),
+        SwitchWidget(),
+        ButtonWidget("Execute Action"),
+      ],
+    );
+
+    final card = ContainerWidget.card(child: cardContentColumn);
+
+    final root = ContainerWidget(
+      width: 300,
+      height: 500,
+      padding: 10,
+      color: const Color(0xFFF2F2F2), // Light Gray
+      child: card,
+    );
+
+    // 2. Trigger the Layout on the native side
+    const rootWidth = 300.0;
+    const rootHeight = 500.0;
+    widgetLayoutRoot(root.handle, rootWidth, rootHeight);
+
+    // 3. Get the final UIView handle to pass back to the Platform Channel
+    final uiViewHandle = root.getUIViewHandle();
+    final address = uiViewHandle.address;
+    print("Native UIView handle (address) ready: ${uiViewHandle.address}");
+    print("Calling Swift FFI function with address: $address");
+    // In a real app, you would now use a MethodChannel to send uiViewHandle.address
+    // to Swift/Objective-C to display the UIView via a UIViewController or Platform View.
+    displayWidgetInViewController(address);
+  }
+
   void invokeNative() {
     addNumbers(2, 3);
   }
@@ -122,7 +167,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: invokeNative,
+        onPressed: buildAndRetrieveNativeView,
+        // onPressed: invokeNative,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),

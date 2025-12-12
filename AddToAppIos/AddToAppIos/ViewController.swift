@@ -9,6 +9,9 @@ import UIKit
 import Flutter
 
 class ViewController: UIViewController {
+    
+    
+    static var uiViewController: UIViewController?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,6 +22,7 @@ class ViewController: UIViewController {
            button.frame = CGRect(x: 80.0, y: 210.0, width: 160.0, height: 40.0)
            button.backgroundColor = UIColor.blue
            self.view.addSubview(button)
+           ViewController.uiViewController = self
     }
     
     
@@ -29,8 +33,6 @@ class ViewController: UIViewController {
           FlutterViewController(engine: flutterEngine, nibName: nil, bundle: nil)
       present(flutterViewController, animated: true, completion: nil)
     }
-    
-
-
+   
 }
 
