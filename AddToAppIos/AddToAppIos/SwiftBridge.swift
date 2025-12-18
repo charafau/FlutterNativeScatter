@@ -67,11 +67,10 @@ extension UIViewController {
         nativeWidgetView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            nativeWidgetView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            nativeWidgetView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            // Use the size calculated by FlexLayout/widget_layout_root
-            nativeWidgetView.widthAnchor.constraint(equalToConstant: nativeWidgetView.frame.size.width),
-            nativeWidgetView.heightAnchor.constraint(equalToConstant: nativeWidgetView.frame.size.height)
+            nativeWidgetView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            nativeWidgetView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            nativeWidgetView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            nativeWidgetView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
         ])
     }
 }

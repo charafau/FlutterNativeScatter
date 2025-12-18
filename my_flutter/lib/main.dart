@@ -160,18 +160,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void buildListView(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    // List should now fill automatically as root view resizes
+    final list = createSimpleList();
 
-    // We need to give the ListView a width because the ContainerWidget aligns items to center,
-    // and UICollectionView has no intrinsic width.
-    final list = createSimpleList().frame(width: size.width - 20, height: null);
+    // Wrap in SafeAreaWidget to avoid notch/home indicator
+    _nativeRoot = SafeAreaWidget(
+      child: list,
+    ).padding(10).background(const Color(0xFFF2F2F2));
 
-    _nativeRoot = ContainerWidget(child: list)
-        .padding(10)
-        .background(const Color(0xFFF2F2F2))
-        .frame(width: size.width, height: size.height); // Light Gray
-
-    widgetLayoutRoot(_nativeRoot!.handle, size.width, size.height);
+    // No need to manually trigger layout or pass size!
+    // The native layoutSubviews() in FlexView will handle it.
 
     final uiViewHandle = _nativeRoot!.getUIViewHandle();
     final address = uiViewHandle.address;

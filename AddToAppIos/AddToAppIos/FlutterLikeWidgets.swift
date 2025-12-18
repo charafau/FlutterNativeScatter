@@ -25,10 +25,21 @@ public class FlexWidget: NSObject {
 }
 
 
+// Custom UIView that triggers FlexLayout updates on resize
+public class FlexView: UIView {
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        print("DEBUG: FlexView layoutSubviews frame: \(frame)")
+        // Determine layout mode? Default to fitContainer for root?
+        // Actually, just calling layout() uses the defined properties.
+        self.flex.layout()
+    }
+}
+
 // Handles Padding, Size, Color, and a single Child
 public class ContainerWidget: FlexWidget {
-    public init() {
-        super.init(view: UIView())
+    public override init(view: UIView = FlexView()) {
+        super.init(view: view)
     }
     
     // Builder methods for configuration
@@ -62,6 +73,48 @@ public class ContainerWidget: FlexWidget {
     }
 }
 
+public class SafeAreaView: FlexView {
+    var onInsetsChanged: (() -> Void)?
+    
+    public override func safeAreaInsetsDidChange() {
+        super.safeAreaInsetsDidChange()
+        onInsetsChanged?()
+    }
+}
+
+public class SafeAreaWidget: ContainerWidget {
+    public init() {
+        let view = SafeAreaView()
+        super.init(view: view)
+        view.onInsetsChanged = { [weak self] in
+            self?.layout()
+        }
+    }
+    
+    public override func layout() {
+        // Apply safe area insets as padding
+        view.flex.padding(view.safeAreaInsets)
+        view.flex.layout()
+    }
+    
+    public override func setChild(_ child: FlexWidget) -> ContainerWidget {
+        view.addSubview(child.view)
+        child.view.flex.markDirty()
+        
+        // SafeArea should fill the screen and stretch its child
+        view.flex.direction(.column).alignItems(.stretch).define { flex in
+            flex.addItem(child.view).grow(1)
+        }
+        return self
+    }
+}
+
+@_cdecl("create_safe_area")
+public func create_safe_area() -> UnsafeMutableRawPointer {
+    let widget = SafeAreaWidget()
+    return Unmanaged.passRetained(widget).toOpaque()
+}
+
 // Handles Multi-child layouts (Column/Row)
 public class LinearWidget: FlexWidget {
     private let direction: Flex.Direction
@@ -86,7 +139,7 @@ public class LinearWidget: FlexWidget {
 
 // Special "Card" Widget (Composition of Container + Styling)
 public class CardWidget: ContainerWidget {
-    public override init() {
+    public  init() {
         super.init()
         view.layer.cornerRadius = 12
         view.layer.shadowColor = UIColor.black.cgColor

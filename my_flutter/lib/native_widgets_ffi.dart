@@ -150,6 +150,15 @@ class ContainerWidget extends NativeWidget {
     }
   }
 
+  // Protected constructor for subclasses
+  ContainerWidget._fromHandle(Pointer<Void> handle, {NativeWidget? child})
+    : _child = child,
+      super(handle) {
+    if (child != null) {
+      containerSetChild(handle, child.handle);
+    }
+  }
+
   // Factory for Card
   factory ContainerWidget.card({required NativeWidget child}) {
     return ContainerWidget(
@@ -157,6 +166,11 @@ class ContainerWidget extends NativeWidget {
       child: child,
     ).padding(16).background(Colors.white);
   }
+}
+
+class SafeAreaWidget extends ContainerWidget {
+  SafeAreaWidget({required NativeWidget child})
+    : super._fromHandle(createSafeArea(), child: child);
 }
 
 // MARK: - Linear Widgets (Column/Row)

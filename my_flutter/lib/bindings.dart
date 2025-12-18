@@ -142,6 +142,8 @@ final listViewUpdateItem = nativeLib
     .lookupFunction<ListViewUpdateItemC, ListViewUpdateItemDart>(
       'list_view_update_item',
     );
+final createSafeArea = nativeLib
+    .lookupFunction<CreateListViewC, CreateListViewDart>('create_safe_area');
 final containerSetChild = nativeLib
     .lookupFunction<ContainerSetChildC, ContainerSetChildDart>(
       'container_set_child',
