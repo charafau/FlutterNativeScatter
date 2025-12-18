@@ -11,12 +11,56 @@ abstract class NativeWidget {
   /// The opaque pointer to the native Swift/UIView object.
   final WidgetRef handle;
 
-  NativeWidget(this.handle);
+  // Finalizer to automatically release the native widget when the Dart object is GC'd
+  static final _finalizer = Finalizer<WidgetRef>((ptr) {
+    widgetRelease(ptr);
+  });
+
+  NativeWidget(this.handle) {
+    _finalizer.attach(this, handle, detach: this);
+  }
 
   /// Retrieves the handle to the underlying UIKit UIView.
-  /// This is used to pass the final view back to a platform view or host view controller.
   Pointer<Void> getUIViewHandle() {
     return getUIViewFromWidget(handle);
+  }
+
+  // --- Builder / Modifiers ---
+
+  /// Sets the padding (inner spacing)
+  T padding<T extends NativeWidget>(double value) {
+    widgetSetPadding(handle, value);
+    return this as T;
+  }
+
+  /// Sets the margin (outer spacing)
+  T margin<T extends NativeWidget>(double value) {
+    widgetSetMargin(handle, value);
+    return this as T;
+  }
+
+  /// Sets the frame size. Pass 0 or null for auto/flex.
+  T frame<T extends NativeWidget>({double? width, double? height}) {
+    widgetSetSize(handle, width ?? 0, height ?? 0);
+    return this as T;
+  }
+
+  /// Sets the background color.
+  T background<T extends NativeWidget>(Color color) {
+    widgetSetBackgroundColor(
+      handle,
+      color.red / 255.0,
+      color.green / 255.0,
+      color.blue / 255.0,
+      color.opacity,
+    );
+    return this as T;
+  }
+
+  /// Sets the corner radius.
+  T cornerRadius<T extends NativeWidget>(double value) {
+    widgetSetCornerRadius(handle, value);
+    return this as T;
   }
 }
 
@@ -62,23 +106,9 @@ class SwitchWidget extends NativeWidget {
 // MARK: - Container Widgets
 
 class ContainerWidget extends NativeWidget {
-  ContainerWidget({
-    double padding = 0,
-    double width = 0, // 0 means auto/flex in the C binding
-    double height = 0, // 0 means auto/flex in the C binding
-    Color color = Colors.white,
-    NativeWidget? child,
-    bool isCard = false,
-  }) : super(isCard ? createCard() : createContainer()) {
-    // Convert Flutter Color to R, G, B floats (0.0 to 1.0)
-    final r = color.red / 255.0;
-    final g = color.green / 255.0;
-    final b = color.blue / 255.0;
-
-    // 1. Set properties
-    containerSetProperties(handle, padding, width, height, r, g, b);
-
-    // 2. Set child (composition)
+  // Now simpler: acts mainly as a wrapper.
+  ContainerWidget({NativeWidget? child, bool isCard = false})
+    : super(isCard ? createCard() : createContainer()) {
     if (child != null) {
       containerSetChild(handle, child.handle);
     }
@@ -88,10 +118,8 @@ class ContainerWidget extends NativeWidget {
   factory ContainerWidget.card({required NativeWidget child}) {
     return ContainerWidget(
       isCard: true,
-      padding: 16,
-      color: Colors.white,
       child: child,
-    );
+    ).padding(16).background(Colors.white);
   }
 }
 

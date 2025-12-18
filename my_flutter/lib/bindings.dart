@@ -12,16 +12,13 @@ typedef CreateTextC = WidgetRef Function(Pointer<Utf8> text);
 typedef CreateButtonC = WidgetRef Function(Pointer<Utf8> text);
 typedef CreateImageC = WidgetRef Function(Pointer<Utf8> name);
 typedef CreateVoidC = WidgetRef Function();
-typedef ContainerSetPropsC =
-    Void Function(
-      WidgetRef,
-      Float padding,
-      Float w,
-      Float h,
-      Float r,
-      Float g,
-      Float b,
-    );
+typedef WidgetReleaseC = Void Function(WidgetRef widget);
+typedef WidgetSetPaddingC = Void Function(WidgetRef widget, Float value);
+typedef WidgetSetMarginC = Void Function(WidgetRef widget, Float value);
+typedef WidgetSetSizeC = Void Function(WidgetRef widget, Float w, Float h);
+typedef WidgetSetBgColorC =
+    Void Function(WidgetRef widget, Float r, Float g, Float b, Float a);
+typedef WidgetSetCornerRadiusC = Void Function(WidgetRef widget, Float radius);
 typedef ContainerSetChildC = Void Function(WidgetRef parent, WidgetRef child);
 typedef LinearAddChildC = Void Function(WidgetRef parent, WidgetRef child);
 typedef WidgetLayoutRootC =
@@ -33,16 +30,14 @@ typedef CreateTextDart = WidgetRef Function(Pointer<Utf8> text);
 typedef CreateButtonDart = WidgetRef Function(Pointer<Utf8> text);
 typedef CreateImageDart = WidgetRef Function(Pointer<Utf8> name);
 typedef CreateVoidDart = WidgetRef Function();
-typedef ContainerSetPropsDart =
-    void Function(
-      WidgetRef,
-      double padding,
-      double w,
-      double h,
-      double r,
-      double g,
-      double b,
-    );
+typedef WidgetReleaseDart = void Function(WidgetRef widget);
+typedef WidgetSetPaddingDart = void Function(WidgetRef widget, double value);
+typedef WidgetSetMarginDart = void Function(WidgetRef widget, double value);
+typedef WidgetSetSizeDart = void Function(WidgetRef widget, double w, double h);
+typedef WidgetSetBgColorDart =
+    void Function(WidgetRef widget, double r, double g, double b, double a);
+typedef WidgetSetCornerRadiusDart =
+    void Function(WidgetRef widget, double radius);
 typedef ContainerSetChildDart =
     void Function(WidgetRef parent, WidgetRef child);
 typedef LinearAddChildDart = void Function(WidgetRef parent, WidgetRef child);
@@ -77,9 +72,21 @@ final createRow = nativeLib.lookupFunction<CreateVoidC, CreateVoidDart>(
   'create_row',
 );
 
-final containerSetProperties = nativeLib
-    .lookupFunction<ContainerSetPropsC, ContainerSetPropsDart>(
-      'container_set_properties',
+final widgetSetPadding = nativeLib
+    .lookupFunction<WidgetSetPaddingC, WidgetSetPaddingDart>(
+      'widget_set_padding',
+    );
+final widgetSetMargin = nativeLib
+    .lookupFunction<WidgetSetMarginC, WidgetSetMarginDart>('widget_set_margin');
+final widgetSetSize = nativeLib
+    .lookupFunction<WidgetSetSizeC, WidgetSetSizeDart>('widget_set_size');
+final widgetSetBackgroundColor = nativeLib
+    .lookupFunction<WidgetSetBgColorC, WidgetSetBgColorDart>(
+      'widget_set_background_color',
+    );
+final widgetSetCornerRadius = nativeLib
+    .lookupFunction<WidgetSetCornerRadiusC, WidgetSetCornerRadiusDart>(
+      'widget_set_corner_radius',
     );
 final containerSetChild = nativeLib
     .lookupFunction<ContainerSetChildC, ContainerSetChildDart>(
@@ -96,6 +103,9 @@ final getUIViewFromWidget = nativeLib
     .lookupFunction<GetUIViewFromWidgetC, GetUIViewFromWidgetDart>(
       'get_ui_view_from_widget',
     );
+
+final widgetRelease = nativeLib
+    .lookupFunction<WidgetReleaseC, WidgetReleaseDart>('widget_release');
 
 typedef DisplayWidgetC = Void Function(Int32 viewHandleAddress);
 

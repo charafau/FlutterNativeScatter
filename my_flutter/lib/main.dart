@@ -84,13 +84,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final card = ContainerWidget.card(child: cardContentColumn);
 
-    final root = ContainerWidget(
-      width: 300,
-      height: 500,
-      padding: 10,
-      color: const Color(0xFFF2F2F2), // Light Gray
-      child: card,
-    );
+    final root = ContainerWidget(child: card)
+        .frame(width: 300, height: 500)
+        .padding(10)
+        .background(const Color(0xFFF2F2F2)); // Light Gray
 
     // 2. Trigger the Layout on the native side
     const rootWidth = 300.0;

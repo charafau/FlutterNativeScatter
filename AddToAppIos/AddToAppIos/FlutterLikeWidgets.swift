@@ -183,18 +183,38 @@ public func create_row() -> UnsafeMutableRawPointer {
 
 // --- Modifiers / Composition ---
 
-@_cdecl("container_set_properties")
-public func container_set_properties(_ ptr: UnsafeMutableRawPointer, padding: Float, w: Float, h: Float, r: Float, g: Float, b: Float) {
-    let widget = Unmanaged<ContainerWidget>.fromOpaque(ptr).takeUnretainedValue()
-    
-    _ = widget.setPadding(CGFloat(padding))
-          .setColor(r: CGFloat(r), g: CGFloat(g), b: CGFloat(b))
-    
-    // If width/height are <= 0, we treat them as nil (auto/flex)
-    let widthArg: CGFloat? = w > 0 ? CGFloat(w) : nil
-    let heightArg: CGFloat? = h > 0 ? CGFloat(h) : nil
-    _ = widget.setSize(width: widthArg, height: heightArg)
+@_cdecl("widget_set_padding")
+public func widget_set_padding(_ ptr: UnsafeMutableRawPointer, _ value: Float) {
+    let widget = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
+    widget.view.flex.padding(CGFloat(value))
 }
+
+@_cdecl("widget_set_margin")
+public func widget_set_margin(_ ptr: UnsafeMutableRawPointer, _ value: Float) {
+    let widget = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
+    widget.view.flex.margin(CGFloat(value))
+}
+
+@_cdecl("widget_set_size")
+public func widget_set_size(_ ptr: UnsafeMutableRawPointer, width: Float, height: Float) {
+    let widget = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
+    if width > 0 { widget.view.flex.width(CGFloat(width)) }
+    if height > 0 { widget.view.flex.height(CGFloat(height)) }
+}
+
+@_cdecl("widget_set_background_color")
+public func widget_set_background_color(_ ptr: UnsafeMutableRawPointer, r: Float, g: Float, b: Float, a: Float) {
+    let widget = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
+    widget.view.backgroundColor = UIColor(red: CGFloat(r), green: CGFloat(g), blue: CGFloat(b), alpha: CGFloat(a))
+}
+
+@_cdecl("widget_set_corner_radius")
+public func widget_set_corner_radius(_ ptr: UnsafeMutableRawPointer, radius: Float) {
+    let widget = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
+    widget.view.layer.cornerRadius = CGFloat(radius)
+    widget.view.clipsToBounds = true
+}
+
 
 @_cdecl("container_set_child")
 public func container_set_child(_ containerPtr: UnsafeMutableRawPointer, _ childPtr: UnsafeMutableRawPointer) {
@@ -239,4 +259,10 @@ public func get_ui_view_from_widget(_ ptr: UnsafeMutableRawPointer) -> UnsafeMut
     // 3. Increment the reference count and return the opaque pointer to the UIView
     // This passes ownership of the UIView reference to the C/Dart layer.
     return Unmanaged.passRetained(uiView).toOpaque()
+}
+
+@_cdecl("widget_release")
+public func widget_release(_ ptr: UnsafeMutableRawPointer) {
+    // Take ownership back from C/Dart and let it fall out of scope to deallocate
+    Unmanaged<FlexWidget>.fromOpaque(ptr).release()
 }
