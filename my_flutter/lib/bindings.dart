@@ -26,6 +26,16 @@ typedef WidgetSetOnClickC =
       Pointer<NativeFunction<Void Function()>> callback,
     );
 typedef WidgetLogC = Void Function(Pointer<Utf8> message);
+typedef CreateListViewC = WidgetRef Function();
+typedef ListViewBuilderCallbackC = Void Function(WidgetRef list, Int64 index);
+typedef ListViewUpdateItemC =
+    Void Function(WidgetRef list, Int64 index, WidgetRef item);
+typedef ListViewSetBuilderC =
+    Void Function(
+      WidgetRef list,
+      Int64 count,
+      Pointer<NativeFunction<ListViewBuilderCallbackC>> callback,
+    );
 typedef ContainerSetChildC = Void Function(WidgetRef parent, WidgetRef child);
 typedef LinearAddChildC = Void Function(WidgetRef parent, WidgetRef child);
 typedef WidgetLayoutRootC =
@@ -52,6 +62,15 @@ typedef WidgetSetOnClickDart =
       Pointer<NativeFunction<Void Function()>> callback,
     );
 typedef WidgetLogDart = void Function(Pointer<Utf8> message);
+typedef CreateListViewDart = WidgetRef Function();
+typedef ListViewUpdateItemDart =
+    void Function(WidgetRef list, int index, WidgetRef item);
+typedef ListViewSetBuilderDart =
+    void Function(
+      WidgetRef list,
+      int count,
+      Pointer<NativeFunction<ListViewBuilderCallbackC>> callback,
+    );
 typedef ContainerSetChildDart =
     void Function(WidgetRef parent, WidgetRef child);
 typedef LinearAddChildDart = void Function(WidgetRef parent, WidgetRef child);
@@ -113,6 +132,16 @@ final widgetSetOnClick = nativeLib
 final widgetLog = nativeLib.lookupFunction<WidgetLogC, WidgetLogDart>(
   'widget_log',
 );
+final createListView = nativeLib
+    .lookupFunction<CreateListViewC, CreateListViewDart>('create_list_view');
+final listViewSetBuilder = nativeLib
+    .lookupFunction<ListViewSetBuilderC, ListViewSetBuilderDart>(
+      'list_view_set_builder',
+    );
+final listViewUpdateItem = nativeLib
+    .lookupFunction<ListViewUpdateItemC, ListViewUpdateItemDart>(
+      'list_view_update_item',
+    );
 final containerSetChild = nativeLib
     .lookupFunction<ContainerSetChildC, ContainerSetChildDart>(
       'container_set_child',

@@ -102,14 +102,37 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final text = TextWidget("Hello World");
 
-    _nativeRootColumn = ColumnWidget(children: [text, card]);
+    // Create a list of many items to enable scrolling
+    final scrollChildren = <NativeWidget>[];
+    scrollChildren.add(text);
+    scrollChildren.add(card);
+
+    // Add more items
+    for (int i = 0; i < 20; i++) {
+      scrollChildren.add(
+        ContainerWidget(
+          child: TextWidget("Item $i"),
+        ).padding(10).background(Colors.white).cornerRadius(8),
+      );
+    }
+
+    // Use ListViewWidget.builder instead of direct children
+    // reused 'text' from above
+
+    // We can simulate a static list with a builder
+    final staticItems = [text, card];
+
+    _nativeRootColumn = ListViewWidget.builder(
+      itemCount: staticItems.length,
+      itemBuilder: (index) => staticItems[index],
+    ).expanded();
 
     _nativeRoot = ContainerWidget(
       child: _nativeRootColumn,
     ).padding(10).background(const Color(0xFFF2F2F2)); // Light Gray
 
     // SAVE ROOT TO MEMBER VARIABLE
-    _nativeRoot = _nativeRoot;
+    // _nativeRoot = _nativeRoot;
 
     // 2. Trigger the Layout on the native side with ACTUAL screen dimensions
     final size = MediaQuery.of(context).size;
@@ -122,6 +145,37 @@ class _MyHomePageState extends State<MyHomePage> {
     print("Calling Swift FFI function with address: $address");
     // In a real app, you would now use a MethodChannel to send uiViewHandle.address
     // to Swift/Objective-C to display the UIView via a UIViewController or Platform View.
+    displayWidgetInViewController(address);
+  }
+
+  NativeWidget createSimpleList() {
+    return ListViewWidget.builder(
+      itemCount: 50,
+      itemBuilder: (index) {
+        return TextWidget(
+          "Simple List Item $index",
+        ).padding(15).background(Colors.white).cornerRadius(8).padding(5);
+      },
+    ).expanded();
+  }
+
+  void buildListView(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    // We need to give the ListView a width because the ContainerWidget aligns items to center,
+    // and UICollectionView has no intrinsic width.
+    final list = createSimpleList().frame(width: size.width - 20, height: null);
+
+    _nativeRoot = ContainerWidget(child: list)
+        .padding(10)
+        .background(const Color(0xFFF2F2F2))
+        .frame(width: size.width, height: size.height); // Light Gray
+
+    widgetLayoutRoot(_nativeRoot!.handle, size.width, size.height);
+
+    final uiViewHandle = _nativeRoot!.getUIViewHandle();
+    final address = uiViewHandle.address;
+
     displayWidgetInViewController(address);
   }
 
@@ -165,7 +219,8 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             const Text('Create card using UIKit from dart'),
             ElevatedButton(
-              onPressed: () => buildAndRetrieveNativeView(context),
+              // onPressed: () => buildAndRetrieveNativeView(context),
+              onPressed: () => buildListView(context),
               child: Text('Create'),
             ),
           ],

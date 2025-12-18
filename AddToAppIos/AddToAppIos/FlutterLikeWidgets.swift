@@ -17,6 +17,11 @@ public class FlexWidget: NSObject {
     init(view: UIView) {
         self.view = view
     }
+    
+    // Default layout implementation does nothing.
+    // Subclasses can override this if they need custom layout logic (like ScrollWidget).
+    open func layout() {
+    }
 }
 
 
@@ -251,20 +256,232 @@ public func widget_log(_ message: UnsafePointer<CChar>) {
 
 @_cdecl("container_set_child")
 public func container_set_child(_ containerPtr: UnsafeMutableRawPointer, _ childPtr: UnsafeMutableRawPointer) {
-    let container = Unmanaged<ContainerWidget>.fromOpaque(containerPtr).takeUnretainedValue()
-    // We take retained value of child because container will now own it essentially
-    // (In a full system, you need careful memory management here.
-    // For simplicity: C creates, C passes ownership to Parent).
+    let container = Unmanaged<FlexWidget>.fromOpaque(containerPtr).takeUnretainedValue()
     let child = Unmanaged<FlexWidget>.fromOpaque(childPtr).takeUnretainedValue()
     
-    _ = container.setChild(child)
+    // Support ScrollWidget specifically
+    if let scrollWidget = container as? ScrollWidget {
+        scrollWidget.setChild(child.view)
+    } else if let containerWidget = container as? ContainerWidget {
+        _ = containerWidget.setChild(child)
+    }
 }
 
-@_cdecl("linear_add_child")
-public func linear_add_child(_ parentPtr: UnsafeMutableRawPointer, _ childPtr: UnsafeMutableRawPointer) {
-    let parent = Unmanaged<LinearWidget>.fromOpaque(parentPtr).takeUnretainedValue()
+// MARK: - ScrollWidget
+// MARK: - ScrollWidget
+
+// Custom UIScrollView to handle internal layout automatically
+class FlexScrollView: UIScrollView {
+    weak var contentContainer: UIView?
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        guard let contentContainer = contentContainer else { return }
+        
+        // Pin contentContainer to top-left and let it grow
+        contentContainer.pin.top().left().right()
+        
+        // Layout the contentContainer
+        contentContainer.flex.layout(mode: .adjustHeight)
+        
+        // Sets contentSize
+        self.contentSize = contentContainer.frame.size
+        
+        print("DEBUG: FlexScrollView layout. Frame: \(self.frame), ContentFrame: \(contentContainer.frame), ContentSize: \(self.contentSize)")
+    }
+}
+
+public class ScrollWidget: FlexWidget {
+    public let contentContainer = UIView()
+    
+    init() {
+        let scrollView = FlexScrollView()
+        scrollView.contentContainer = contentContainer
+        scrollView.backgroundColor = .clear // maybe .red for debugging?
+        
+        super.init(view: scrollView)
+        
+        // Configure the content container
+        contentContainer.flex.direction(.column).padding(10)
+        
+        scrollView.addSubview(contentContainer)
+    }
+    
+    public func setChild(_ childView: UIView) {
+        contentContainer.flex.addItem(childView)
+    }
+    
+    // No longer need manual layout override since FlexScrollView handles it
+}
+
+@_cdecl("create_scroll_view")
+public func create_scroll_view() -> UnsafeMutableRawPointer {
+    let widget = ScrollWidget()
+    return Unmanaged.passRetained(widget).toOpaque()
+}
+
+// MARK: - NativeListView (UICollectionView)
+
+class FlexCollectionCell: UICollectionViewCell {
+    static let id = "FlexCollectionCell"
+    var hostedView: UIView? {
+        didSet {
+            // Remove old view if any
+            oldValue?.removeFromSuperview()
+            
+            if let v = hostedView {
+                contentView.addSubview(v)
+                // We use flex layout inside the cell too
+                v.flex.markDirty()
+                setNeedsLayout()
+            }
+        }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let hostedView = hostedView else { return }
+        
+        // Layout logic:
+        // We want the hosted view to fill the cell's CONTENT VIEW
+        hostedView.pin.all()
+        hostedView.flex.layout() 
+    }
+    
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
+        guard let hostedView = hostedView else { return .zero }
+        // Calculate size based on width
+        hostedView.flex.width(size.width).layout(mode: .adjustHeight)
+        return hostedView.frame.size
+    }
+    
+    // UICollectionViewCell preferredAttributes uses systemLayoutSizeFitting by default
+}
+
+    
+public class NativeListView: FlexWidget, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    var itemCount: Int = 0
+    // Async builder: Requests index, returns nothing immediately.
+    var builder: ((Int) -> Void)?
+    var cachedItems: [Int: UIView] = [:]
+    let collectionView: UICollectionView
+    
+    init() {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 10
+        // Debugging: Start with fixed size to rule out auto-sizing issues
+        layout.itemSize = CGSize(width: UIScreen.main.bounds.width - 20, height: 60)
+        // layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize 
+        
+        // Initialize Collection View
+        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .clear // .blue for debugging?
+        
+        super.init(view: collectionView)
+        
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.register(FlexCollectionCell.self, forCellWithReuseIdentifier: FlexCollectionCell.id)
+    }
+    
+    public func setBuilder(count: Int, callback: @escaping (Int) -> Void) {
+        print("DEBUG: NativeListView setBuilder count: \(count)")
+        self.itemCount = count
+        self.builder = callback
+        self.cachedItems.removeAll() // Clear cache on new builder
+        collectionView.reloadData()
+    }
+    
+    public func updateItem(index: Int, view: UIView) {
+        // print("DEBUG: NativeListView updateItem at \(index)")
+        cachedItems[index] = view
+        
+        // Find if this cell is visible and update it immediately
+        // (Avoiding full reloadData for performance)
+        for cell in collectionView.visibleCells {
+            if let indexPath = collectionView.indexPath(for: cell), indexPath.item == index {
+                (cell as? FlexCollectionCell)?.hostedView = view
+            }
+        }
+    }
+    
+    // MARK: - DataSource
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return itemCount
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FlexCollectionCell.id, for: indexPath) as! FlexCollectionCell
+        
+        if let view = cachedItems[indexPath.item] {
+            cell.hostedView = view
+        } else {
+            // Cache miss
+            cell.hostedView = nil // Or a placeholder/loading view
+            
+            if let builder = builder {
+                // print("DEBUG: request builder for \(indexPath.item)")
+                builder(indexPath.item)
+            }
+        }
+        
+        return cell
+    }
+    
+    // ensure cleanup?
+    
+    // MARK: - FlowLayout Delegate (Optional customization)
+    /*
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        // If we didn't use automaticSize, we would calculate it here:
+        let item = items[indexPath.item]
+        // Calculate height for full width
+        let width = collectionView.bounds.width
+        item.flex.width(width).layout(mode: .adjustHeight)
+        return item.frame.size
+    }
+    */
+    
+    // Ensure the list itself lays out correctly
+    public override func layout() {
+        // print("DEBUG: NativeListView layout frame: \(view.frame)")
+        super.layout()
+        collectionView.collectionViewLayout.invalidateLayout()
+    }
+}
+
+@_cdecl("list_view_set_builder")
+public func list_view_set_builder(
+    _ listPtr: UnsafeMutableRawPointer,
+    _ count: Int,
+    _ callback: @convention(c) @escaping (UnsafeMutableRawPointer, Int) -> Void
+) {
+    let listView = Unmanaged<FlexWidget>.fromOpaque(listPtr).takeUnretainedValue() as! NativeListView
+    
+    listView.setBuilder(count: count) { index in
+        // Call C callback to request item (Async)
+        callback(listPtr, index)
+    }
+}
+
+@_cdecl("list_view_update_item")
+public func list_view_update_item(
+    _ listPtr: UnsafeMutableRawPointer,
+    _ index: Int,
+    _ childPtr: UnsafeMutableRawPointer
+) {
+    let listView = Unmanaged<FlexWidget>.fromOpaque(listPtr).takeUnretainedValue() as! NativeListView
     let child = Unmanaged<FlexWidget>.fromOpaque(childPtr).takeUnretainedValue()
-    parent.addChildren([child])
+    
+    listView.updateItem(index: index, view: child.view)
+}
+
+@_cdecl("create_list_view")
+public func create_list_view() -> UnsafeMutableRawPointer {
+    let widget = NativeListView()
+    return Unmanaged.passRetained(widget).toOpaque()
 }
 
 // --- Layout Helper ---
