@@ -29,7 +29,6 @@ public class FlexWidget: NSObject {
 public class FlexView: UIView {
     public override func layoutSubviews() {
         super.layoutSubviews()
-        print("DEBUG: FlexView layoutSubviews frame: \(frame)")
         // Determine layout mode? Default to fitContainer for root?
         // Actually, just calling layout() uses the defined properties.
         self.flex.layout()
