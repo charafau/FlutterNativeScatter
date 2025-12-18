@@ -104,6 +104,8 @@ public class TextWidget: FlexWidget {
 }
 
 public class ButtonWidget: FlexWidget {
+    private var onClick: (() -> Void)?
+    
     public init(text: String) {
         let btn = UIButton(type: .system)
         btn.setTitle(text, for: .normal)
@@ -114,6 +116,16 @@ public class ButtonWidget: FlexWidget {
         super.init(view: btn)
         // Give button specific sizing constraints in flex
         self.view.flex.height(44).paddingHorizontal(20)
+        
+        btn.addTarget(self, action: #selector(handleTap), for: .touchUpInside)
+    }
+    
+    @objc func handleTap() {
+        onClick?()
+    }
+    
+    func setOnClick(_ callback: @escaping () -> Void) {
+        self.onClick = callback
     }
 }
 
@@ -219,6 +231,21 @@ public func widget_set_corner_radius(_ ptr: UnsafeMutableRawPointer, radius: Flo
 public func widget_set_flex_grow(_ ptr: UnsafeMutableRawPointer, _ value: Float) {
     let widget = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
     widget.view.flex.grow(CGFloat(value))
+}
+
+@_cdecl("widget_set_on_click")
+public func widget_set_on_click(_ ptr: UnsafeMutableRawPointer, _ callback: @convention(c) @escaping () -> Void) {
+    let widget = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
+    if let btn = widget as? ButtonWidget {
+        btn.setOnClick {
+            callback()
+        }
+    }
+}
+
+@_cdecl("widget_log")
+public func widget_log(_ message: UnsafePointer<CChar>) {
+    NSLog("NATIVE_LOG: \(String(cString: message))")
 }
 
 

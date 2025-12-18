@@ -64,7 +64,15 @@ final AddNumbersDart addNumbers = nativeLib
     .lookupFunction<AddNumbersC, AddNumbersDart>('add_numbers');
 
 class _MyHomePageState extends State<MyHomePage> {
+  // Keep the root widget alive!
+  // If this is a local variable, it gets GC'd immediately after the function returns,
+  // causing the native side to be released (finalizer runs).
+  NativeWidget? _nativeRoot;
+  NativeWidget? _nativeRootColumn;
+
   void buildAndRetrieveNativeView(BuildContext context) {
+    print("Building Native View...");
+
     // 1. Build the widget tree using the compositional approach
     final headerRow = RowWidget(
       children: [
@@ -78,7 +86,15 @@ class _MyHomePageState extends State<MyHomePage> {
         headerRow,
         TextWidget("This UI is built in FlexLayout and composed in Dart!"),
         SwitchWidget(),
-        ButtonWidget("Execute Action"),
+        ButtonWidget(
+          "Execute Action",
+          onPressed: () {
+            print("Dart: Button pressed!");
+            nativeLog(
+              "Button pressed callback received in Dart and sent back to Native!",
+            );
+          },
+        ),
       ],
     );
 
@@ -86,18 +102,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
     final text = TextWidget("Hello World");
 
-    final rootColumn = ColumnWidget(children: [text, card]);
+    _nativeRootColumn = ColumnWidget(children: [text, card]);
 
-    final root = ContainerWidget(
-      child: rootColumn,
+    _nativeRoot = ContainerWidget(
+      child: _nativeRootColumn,
     ).padding(10).background(const Color(0xFFF2F2F2)); // Light Gray
+
+    // SAVE ROOT TO MEMBER VARIABLE
+    _nativeRoot = _nativeRoot;
 
     // 2. Trigger the Layout on the native side with ACTUAL screen dimensions
     final size = MediaQuery.of(context).size;
-    widgetLayoutRoot(root.handle, size.width, size.height);
+    widgetLayoutRoot(_nativeRoot!.handle, size.width, size.height);
 
     // 3. Get the final UIView handle to pass back to the Platform Channel
-    final uiViewHandle = root.getUIViewHandle();
+    final uiViewHandle = _nativeRoot!.getUIViewHandle();
     final address = uiViewHandle.address;
     print("Native UIView handle (address) ready: ${uiViewHandle.address}");
     print("Calling Swift FFI function with address: $address");

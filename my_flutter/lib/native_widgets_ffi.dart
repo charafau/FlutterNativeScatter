@@ -4,6 +4,13 @@ import 'package:flutter/material.dart';
 
 import 'bindings.dart'; // FFI bindings from Section 1
 
+/// Logs a message to the native iOS console.
+void nativeLog(String message) {
+  final cStr = message.toNativeUtf8();
+  widgetLog(cStr);
+  calloc.free(cStr);
+}
+
 // MARK: - Base Widget Class (Manages the native pointer)
 
 /// Represents a FlexWidget handle created on the native side.
@@ -85,7 +92,15 @@ class TextWidget extends NativeWidget {
 }
 
 class ButtonWidget extends NativeWidget {
-  ButtonWidget(String text) : super(_create(text));
+  // Keep a reference to the NativeCallable to prevent it from being GC'd
+  NativeCallable<Void Function()>? _callback;
+
+  ButtonWidget(String text, {VoidCallback? onPressed}) : super(_create(text)) {
+    if (onPressed != null) {
+      _callback = NativeCallable<Void Function()>.listener(onPressed);
+      widgetSetOnClick(handle, _callback!.nativeFunction);
+    }
+  }
 
   static WidgetRef _create(String text) {
     final cStr = text.toNativeUtf8();
@@ -93,6 +108,16 @@ class ButtonWidget extends NativeWidget {
     calloc.free(cStr);
     return ptr;
   }
+
+  // Override internal dispose if needed, but NativeCallable.listener usually
+  // needs to be explicitly closed if we want to clean up early.
+  // However, since it's attached to the object, when the object dies,
+  // we might want a finalizer for it too, or just let it live attached.
+  // Actually, NativeCallable.listener memory is managed by Dart VM mostly,
+  // but we should close it when the widget is destroyed.
+  // For simplicity here, we rely on the fact that if the Dart object dies,
+  // we don't need the callback anymore.
+  // Ideal production: Add a close() method called by Finalizer.
 }
 
 class ImageWidget extends NativeWidget {
@@ -113,9 +138,13 @@ class SwitchWidget extends NativeWidget {
 // MARK: - Container Widgets
 
 class ContainerWidget extends NativeWidget {
+  // Hold a strong reference to child to prevent GC
+  final NativeWidget? _child;
+
   // Now simpler: acts mainly as a wrapper.
   ContainerWidget({NativeWidget? child, bool isCard = false})
-    : super(isCard ? createCard() : createContainer()) {
+    : _child = child,
+      super(isCard ? createCard() : createContainer()) {
     if (child != null) {
       containerSetChild(handle, child.handle);
     }
@@ -133,8 +162,12 @@ class ContainerWidget extends NativeWidget {
 // MARK: - Linear Widgets (Column/Row)
 
 class ColumnWidget extends NativeWidget {
+  // Hold strong references to children
+  final List<NativeWidget> _children;
+
   ColumnWidget({List<NativeWidget> children = const []})
-    : super(createColumn()) {
+    : _children = children,
+      super(createColumn()) {
     _addChildren(children);
   }
 
@@ -146,7 +179,12 @@ class ColumnWidget extends NativeWidget {
 }
 
 class RowWidget extends NativeWidget {
-  RowWidget({List<NativeWidget> children = const []}) : super(createRow()) {
+  // Hold strong references to children
+  final List<NativeWidget> _children;
+
+  RowWidget({List<NativeWidget> children = const []})
+    : _children = children,
+      super(createRow()) {
     _addChildren(children);
   }
 
