@@ -19,6 +19,7 @@ typedef WidgetSetSizeC = Void Function(WidgetRef widget, Float w, Float h);
 typedef WidgetSetBgColorC =
     Void Function(WidgetRef widget, Float r, Float g, Float b, Float a);
 typedef WidgetSetCornerRadiusC = Void Function(WidgetRef widget, Float radius);
+typedef WidgetSetFlexGrowC = Void Function(WidgetRef widget, Float value);
 typedef ContainerSetChildC = Void Function(WidgetRef parent, WidgetRef child);
 typedef LinearAddChildC = Void Function(WidgetRef parent, WidgetRef child);
 typedef WidgetLayoutRootC =
@@ -38,6 +39,7 @@ typedef WidgetSetBgColorDart =
     void Function(WidgetRef widget, double r, double g, double b, double a);
 typedef WidgetSetCornerRadiusDart =
     void Function(WidgetRef widget, double radius);
+typedef WidgetSetFlexGrowDart = void Function(WidgetRef widget, double value);
 typedef ContainerSetChildDart =
     void Function(WidgetRef parent, WidgetRef child);
 typedef LinearAddChildDart = void Function(WidgetRef parent, WidgetRef child);
@@ -87,6 +89,10 @@ final widgetSetBackgroundColor = nativeLib
 final widgetSetCornerRadius = nativeLib
     .lookupFunction<WidgetSetCornerRadiusC, WidgetSetCornerRadiusDart>(
       'widget_set_corner_radius',
+    );
+final widgetSetFlexGrow = nativeLib
+    .lookupFunction<WidgetSetFlexGrowC, WidgetSetFlexGrowDart>(
+      'widget_set_flex_grow',
     );
 final containerSetChild = nativeLib
     .lookupFunction<ContainerSetChildC, ContainerSetChildDart>(

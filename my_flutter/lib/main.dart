@@ -64,7 +64,7 @@ final AddNumbersDart addNumbers = nativeLib
     .lookupFunction<AddNumbersC, AddNumbersDart>('add_numbers');
 
 class _MyHomePageState extends State<MyHomePage> {
-  void buildAndRetrieveNativeView() {
+  void buildAndRetrieveNativeView(BuildContext context) {
     // 1. Build the widget tree using the compositional approach
     final headerRow = RowWidget(
       children: [
@@ -82,17 +82,19 @@ class _MyHomePageState extends State<MyHomePage> {
       ],
     );
 
-    final card = ContainerWidget.card(child: cardContentColumn);
+    final card = ContainerWidget.card(child: cardContentColumn).expanded();
 
-    final root = ContainerWidget(child: card)
-        .frame(width: 300, height: 500)
-        .padding(10)
-        .background(const Color(0xFFF2F2F2)); // Light Gray
+    final text = TextWidget("Hello World");
 
-    // 2. Trigger the Layout on the native side
-    const rootWidth = 300.0;
-    const rootHeight = 500.0;
-    widgetLayoutRoot(root.handle, rootWidth, rootHeight);
+    final rootColumn = ColumnWidget(children: [text, card]);
+
+    final root = ContainerWidget(
+      child: rootColumn,
+    ).padding(10).background(const Color(0xFFF2F2F2)); // Light Gray
+
+    // 2. Trigger the Layout on the native side with ACTUAL screen dimensions
+    final size = MediaQuery.of(context).size;
+    widgetLayoutRoot(root.handle, size.width, size.height);
 
     // 3. Get the final UIView handle to pass back to the Platform Channel
     final uiViewHandle = root.getUIViewHandle();
@@ -144,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             const Text('Create card using UIKit from dart'),
             ElevatedButton(
-              onPressed: buildAndRetrieveNativeView,
+              onPressed: () => buildAndRetrieveNativeView(context),
               child: Text('Create'),
             ),
           ],

@@ -62,6 +62,13 @@ abstract class NativeWidget {
     widgetSetCornerRadius(handle, value);
     return this as T;
   }
+
+  /// Sets flex grow property (equivalent to Expanded).
+  /// [flex] defaults to 1.0.
+  T expanded<T extends NativeWidget>({double flex = 1.0}) {
+    widgetSetFlexGrow(handle, flex);
+    return this as T;
+  }
 }
 
 // MARK: - Leaf Widgets

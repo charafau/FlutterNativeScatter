@@ -215,6 +215,12 @@ public func widget_set_corner_radius(_ ptr: UnsafeMutableRawPointer, radius: Flo
     widget.view.clipsToBounds = true
 }
 
+@_cdecl("widget_set_flex_grow")
+public func widget_set_flex_grow(_ ptr: UnsafeMutableRawPointer, _ value: Float) {
+    let widget = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
+    widget.view.flex.grow(CGFloat(value))
+}
+
 
 @_cdecl("container_set_child")
 public func container_set_child(_ containerPtr: UnsafeMutableRawPointer, _ childPtr: UnsafeMutableRawPointer) {
