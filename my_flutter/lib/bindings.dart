@@ -37,7 +37,8 @@ typedef ListViewSetBuilderC =
       Pointer<NativeFunction<ListViewBuilderCallbackC>> callback,
     );
 typedef ContainerSetChildC = Void Function(WidgetRef parent, WidgetRef child);
-typedef LinearAddChildC = Void Function(WidgetRef parent, WidgetRef child);
+typedef LinearAddChildrenC =
+    Void Function(WidgetRef parent, Pointer<WidgetRef> children, Int64 count);
 typedef WidgetLayoutRootC =
     Void Function(WidgetRef root, Float width, Float height);
 typedef GetUIViewFromWidgetC = Pointer<Void> Function(WidgetRef root);
@@ -73,7 +74,8 @@ typedef ListViewSetBuilderDart =
     );
 typedef ContainerSetChildDart =
     void Function(WidgetRef parent, WidgetRef child);
-typedef LinearAddChildDart = void Function(WidgetRef parent, WidgetRef child);
+typedef LinearAddChildrenDart =
+    void Function(WidgetRef parent, Pointer<WidgetRef> children, int count);
 typedef WidgetLayoutRootDart =
     void Function(WidgetRef root, double width, double height);
 typedef GetUIViewFromWidgetDart = Pointer<Void> Function(WidgetRef root);
@@ -148,8 +150,10 @@ final containerSetChild = nativeLib
     .lookupFunction<ContainerSetChildC, ContainerSetChildDart>(
       'container_set_child',
     );
-final linearAddChild = nativeLib
-    .lookupFunction<LinearAddChildC, LinearAddChildDart>('linear_add_child');
+final linearAddChildren = nativeLib
+    .lookupFunction<LinearAddChildrenC, LinearAddChildrenDart>(
+      'linear_add_children',
+    );
 
 final widgetLayoutRoot = nativeLib
     .lookupFunction<WidgetLayoutRootC, WidgetLayoutRootDart>(

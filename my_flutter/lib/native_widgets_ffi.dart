@@ -186,8 +186,16 @@ class ColumnWidget extends NativeWidget {
   }
 
   void _addChildren(List<NativeWidget> children) {
-    for (var child in children) {
-      linearAddChild(handle, child.handle);
+    if (children.isEmpty) return;
+
+    final pointerList = calloc<WidgetRef>(children.length);
+    try {
+      for (var i = 0; i < children.length; i++) {
+        pointerList[i] = children[i].handle;
+      }
+      linearAddChildren(handle, pointerList, children.length);
+    } finally {
+      calloc.free(pointerList);
     }
   }
 }
@@ -203,8 +211,16 @@ class RowWidget extends NativeWidget {
   }
 
   void _addChildren(List<NativeWidget> children) {
-    for (var child in children) {
-      linearAddChild(handle, child.handle);
+    if (children.isEmpty) return;
+
+    final pointerList = calloc<WidgetRef>(children.length);
+    try {
+      for (var i = 0; i < children.length; i++) {
+        pointerList[i] = children[i].handle;
+      }
+      linearAddChildren(handle, pointerList, children.length);
+    } finally {
+      calloc.free(pointerList);
     }
   }
 }

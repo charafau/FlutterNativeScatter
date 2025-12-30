@@ -319,6 +319,26 @@ public func container_set_child(_ containerPtr: UnsafeMutableRawPointer, _ child
     }
 }
 
+@_cdecl("linear_add_children")
+public func linear_add_children(
+    _ containerPtr: UnsafeMutableRawPointer,
+    _ childrenRawPtr: UnsafePointer<UnsafeMutableRawPointer>,
+    _ count: Int
+) {
+    let container = Unmanaged<LinearWidget>.fromOpaque(containerPtr).takeUnretainedValue()
+    
+    var children: [FlexWidget] = []
+    
+    // Convert C array of pointers to Swift Array of FlexWidgets
+    let buffer = UnsafeBufferPointer(start: childrenRawPtr, count: count)
+    for ptr in buffer {
+        let child = Unmanaged<FlexWidget>.fromOpaque(ptr).takeUnretainedValue()
+        children.append(child)
+    }
+    
+    container.addChildren(children)
+}
+
 // MARK: - ScrollWidget
 // MARK: - ScrollWidget
 
